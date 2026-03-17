@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Admin dashboard · Academic Peer Review{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+    <div>
+      <h1 class="h4 mb-1">Admin dashboard</h1>
+      <p class="text-muted mb-0">Manage users, roles, and system-level settings.</p>
+    </div>
+    <a href="/admin/" class="btn btn-outline-secondary">Open Django admin</a>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h6 mb-2">User management</h2>
+          <p class="text-muted mb-0">
+            Create users and assign roles (Admin / Instructor / Student) via Django admin. Future permission rules can
+            build on the role field.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h6 mb-2">System status</h2>
+          <p class="text-muted mb-0">
+            This dashboard is a placeholder foundation. As the project grows, this will summarize usage and workflows.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

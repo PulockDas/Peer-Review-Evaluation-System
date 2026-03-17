@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}My courses · Academic Peer Review{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1 class="h4 mb-1">My courses</h1>
+      <p class="text-muted mb-0">Create and manage the courses you teach.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'courses:create' %}">Create course</a>
+  </div>
+
+  {% if courses %}
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">Code</th>
+              <th scope="col">Title</th>
+              <th scope="col" class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for course in courses %}
+              <tr>
+                <td class="fw-semibold">{{ course.code }}</td>
+                <td>{{ course.title }}</td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-secondary" href="{% url 'courses:detail' course.pk %}">View</a>
+                  <a class="btn btn-sm btn-outline-primary" href="{% url 'assignments:list' course.pk %}">Assignments</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <p class="text-muted mb-0">You haven't created any courses yet.</p>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
+

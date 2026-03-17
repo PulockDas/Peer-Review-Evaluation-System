@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Reviews · Academic Peer Review{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Reviews</h1>
+  </div>
+  {% if reviews %}
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">Submission</th>
+              <th scope="col">Reviewer</th>
+              <th scope="col">Score</th>
+              <th scope="col">Created at</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for review in reviews %}
+              <tr>
+                <td>{{ review.submission }}</td>
+                <td>{{ review.reviewer.get_full_name|default:review.reviewer.username }}</td>
+                <td>{{ review.score|default:"—" }}</td>
+                <td>{{ review.created_at }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <p class="text-muted">No reviews have been recorded yet.</p>
+  {% endif %}
+{% endblock %}
+

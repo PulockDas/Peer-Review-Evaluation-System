@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Instructor dashboard · Academic Peer Review{% endblock %}
+
+{% block content %}
+  <h1 class="h4 mb-1">Instructor dashboard</h1>
+  <p class="text-muted mb-3">
+    Instructor-only area. This will later include course setup, assignment creation, peer review configuration, and grading oversight.
+  </p>
+
+  <div class="row g-3">
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h6 mb-2">Courses</h2>
+          <p class="text-muted mb-3">Create and manage your courses, and enroll students.</p>
+          <a class="btn btn-primary" href="{% url 'courses:instructor_list' %}">Manage courses</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h6 mb-2">Assignments</h2>
+          <p class="text-muted mb-0">Assignments are managed under each course.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

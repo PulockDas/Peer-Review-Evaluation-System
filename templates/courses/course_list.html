@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Courses · Academic Peer Review{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Courses</h1>
+  </div>
+  {% if courses %}
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">Code</th>
+              <th scope="col">Title</th>
+              <th scope="col">Instructor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for course in courses %}
+              <tr>
+                <td class="fw-semibold">{{ course.code }}</td>
+                <td>{{ course.title }}</td>
+                <td>{{ course.instructor.get_full_name|default:course.instructor.username }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <p class="text-muted">No courses have been created yet.</p>
+  {% endif %}
+{% endblock %}
+
