@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if editing %}Edit criterion{% else %}Add criterion{% endif %} · {{ rubric.assignment.title }}
+{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'courses:instructor_list' %}">My courses</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'courses:detail' rubric.assignment.course.pk %}">{{ rubric.assignment.course.code }}</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'assignments:list' rubric.assignment.course.pk %}">Assignments</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'rubrics:detail' rubric.assignment.pk %}">Rubric</a></li>
+          <li class="breadcrumb-item active" aria-current="page">
+            {% if editing %}Edit{% else %}Add{% endif %} criterion
+          </li>
+        </ol>
+      </nav>
+
+      <div class="mb-3">
+        <div class="text-muted small">{{ rubric.assignment.course.code }}</div>
+        <h1 class="h4 mb-1">
+          {% if editing %}Edit criterion{% else %}Add criterion{% endif %}
+        </h1>
+        <p class="text-muted mb-0">{{ rubric.assignment.title }}</p>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="{{ form.criterion_name.id_for_label }}">
+                Criterion name <span class="text-danger">*</span>
+              </label>
+              {{ form.criterion_name }}
+              {% if form.criterion_name.errors %}
+                <div class="text-danger small mt-1">{{ form.criterion_name.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.criterion_description.id_for_label }}">
+                Description <span class="text-muted fw-normal">(optional)</span>
+              </label>
+              {{ form.criterion_description }}
+              {% if form.criterion_description.errors %}
+                <div class="text-danger small mt-1">{{ form.criterion_description.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-sm-4">
+                <label class="form-label fw-semibold" for="{{ form.max_marks.id_for_label }}">
+                  Max marks <span class="text-danger">*</span>
+                </label>
+                {{ form.max_marks }}
+                {% if form.max_marks.errors %}
+                  <div class="text-danger small mt-1">{{ form.max_marks.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label fw-semibold" for="{{ form.weight.id_for_label }}">
+                  Weight (%) <span class="text-danger">*</span>
+                </label>
+                {{ form.weight }}
+                {% if form.weight.errors %}
+                  <div class="text-danger small mt-1">{{ form.weight.errors }}</div>
+                {% endif %}
+                <div class="form-text">0 – 100. All criteria should sum to 100%.</div>
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label" for="{{ form.order.id_for_label }}">
+                  Display order
+                </label>
+                {{ form.order }}
+                {% if form.order.errors %}
+                  <div class="text-danger small mt-1">{{ form.order.errors }}</div>
+                {% endif %}
+                <div class="form-text">Lower = appears first.</div>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary">
+                {% if editing %}Save changes{% else %}Add criterion{% endif %}
+              </button>
+              <a class="btn btn-outline-secondary"
+                 href="{% url 'rubrics:detail' rubric.assignment.pk %}">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+{% endblock %}

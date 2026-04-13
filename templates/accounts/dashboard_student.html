@@ -3,31 +3,150 @@
 {% block title %}Student dashboard · Academic Peer Review{% endblock %}
 
 {% block content %}
-  <h1 class="h4 mb-1">Student dashboard</h1>
-  <p class="text-muted mb-3">
-    Student-only area. This will later include assignment submissions, received reviews, and released grades.
-  </p>
 
-  <div class="row g-3">
-    <div class="col-lg-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <h2 class="h6 mb-2">My courses</h2>
-          <p class="text-muted mb-3">See the courses you are enrolled in and view assignments.</p>
-          <a class="btn btn-primary" href="{% url 'courses:student_list' %}">View my courses</a>
-        </div>
-      </div>
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+    <div>
+      <h1 class="page-title">
+        Welcome, {{ user.get_full_name|default:user.username }}
+      </h1>
+      <p class="page-subtitle">Student dashboard</p>
     </div>
-    <div class="col-lg-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <h2 class="h6 mb-2">Role</h2>
-          <p class="text-muted mb-0">
-            Your role is <span class="fw-semibold">{{ user.get_role_display }}</span>.
-          </p>
-        </div>
+  </div>
+
+  {# ── Identity strip ───────────────────────────────────────────────────── #}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body d-flex flex-wrap gap-4 align-items-center py-3">
+      <div>
+        <div class="text-muted small mb-1">Full name</div>
+        <div class="fw-semibold">{{ user.get_full_name|default:"—" }}</div>
+      </div>
+      <div>
+        <div class="text-muted small mb-1">Username</div>
+        <div class="fw-semibold">{{ user.username }}</div>
+      </div>
+      <div>
+        <div class="text-muted small mb-1">Registration number</div>
+        {% if user.reg_no %}
+          <div class="fw-bold font-monospace fs-5 text-primary">{{ user.reg_no }}</div>
+        {% else %}
+          <div class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i>Not assigned — contact your administrator.</div>
+        {% endif %}
+      </div>
+      <div>
+        <div class="text-muted small mb-1">Role</div>
+        <span class="badge bg-secondary">{{ user.get_role_display }}</span>
+      </div>
+      <div class="ms-auto">
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'accounts:profile' %}">
+          <i class="bi bi-person me-1"></i>Profile
+        </a>
       </div>
     </div>
   </div>
-{% endblock %}
 
+  {# ── Stat cards ───────────────────────────────────────────────────────── #}
+  <div class="row g-3 mb-4">
+
+    <div class="col-6 col-md-4">
+      <a href="{% url 'courses:student_list' %}" class="text-decoration-none">
+        <div class="card border-0 shadow-sm stat-card text-center py-3 px-2 h-100">
+          <div class="stat-number text-primary">{{ enrolled_count }}</div>
+          <div class="stat-label">Enrolled courses</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4">
+      <a href="{% url 'reviews:my_reviews' %}" class="text-decoration-none">
+        <div class="card border-0 shadow-sm stat-card text-center py-3 px-2 h-100">
+          <div class="stat-number {% if pending_reviews > 0 %}text-warning{% else %}text-success{% endif %}">
+            {{ pending_reviews }}
+          </div>
+          <div class="stat-label">Pending reviews</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4">
+      <a href="{% url 'grading:my_grades' %}" class="text-decoration-none">
+        <div class="card border-0 shadow-sm stat-card text-center py-3 px-2 h-100">
+          <div class="stat-number text-success">{{ released_grades }}</div>
+          <div class="stat-label">Released grades</div>
+        </div>
+      </a>
+    </div>
+
+  </div>
+
+  <div class="row g-3">
+
+    {# Upcoming assignment deadlines #}
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-3 fw-semibold">
+          <i class="bi bi-calendar-event me-2 text-muted"></i>Upcoming deadlines
+        </div>
+        {% if upcoming_assignments %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Assignment</th>
+                  <th>Course</th>
+                  <th>Due</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for a in upcoming_assignments %}
+                  <tr>
+                    <td class="fw-semibold">{{ a.title }}</td>
+                    <td>
+                      <span class="badge bg-light text-dark border">{{ a.course.code }}</span>
+                    </td>
+                    <td class="text-nowrap deadline-soon">{{ a.due_date|date:"N j, g:i a" }}</td>
+                    <td class="text-end">
+                      <a class="btn btn-sm btn-outline-primary"
+                         href="{% url 'submissions:submit' a.pk %}">Submit</a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="card-body empty-state">
+            <i class="bi bi-calendar-check d-block mb-2"></i>No upcoming deadlines.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Quick links #}
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-3 fw-semibold">
+          <i class="bi bi-lightning me-2 text-muted"></i>Quick links
+        </div>
+        <div class="card-body d-flex flex-column gap-2">
+          <a class="btn btn-outline-primary text-start d-flex align-items-center gap-2"
+             href="{% url 'courses:student_list' %}">
+            <i class="bi bi-mortarboard"></i>My courses
+          </a>
+          <a class="btn btn-outline-secondary text-start d-flex align-items-center gap-2"
+             href="{% url 'reviews:my_reviews' %}">
+            <i class="bi bi-pencil-square"></i>My reviews
+            {% if pending_reviews > 0 %}
+              <span class="badge bg-warning text-dark ms-auto">{{ pending_reviews }}</span>
+            {% endif %}
+          </a>
+          <a class="btn btn-outline-success text-start d-flex align-items-center gap-2"
+             href="{% url 'grading:my_grades' %}">
+            <i class="bi bi-award"></i>My grades
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+{% endblock %}

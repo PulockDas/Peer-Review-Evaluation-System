@@ -12,7 +12,7 @@
     <div class="d-flex gap-2">
       <a class="btn btn-outline-secondary" href="{% url 'courses:detail' course.pk %}">Back to course</a>
       {% if can_manage %}
-        <a class="btn btn-primary" href="{% url 'assignments:create' course.pk %}">Create assignment</a>
+        <a class="btn btn-primary" href="{% url 'assignments:create' course.pk %}">Add assignment</a>
       {% endif %}
     </div>
   </div>
@@ -25,13 +25,67 @@
             <tr>
               <th scope="col">Title</th>
               <th scope="col">Due date</th>
+              <th scope="col">Rubric</th>
+              {% if user.role == "STUDENT" %}<th scope="col">Your submission</th>{% endif %}
+              {% if user.role == "INSTRUCTOR" %}<th scope="col">Submissions</th>{% endif %}
             </tr>
           </thead>
           <tbody>
             {% for a in assignments %}
               <tr>
-                <td class="fw-semibold">{{ a.title }}</td>
-                <td>{{ a.due_date }}</td>
+                <td>
+                  <span class="fw-semibold">{{ a.title }}</span>
+                  {% if a.description %}
+                    <div class="text-muted small">{{ a.description|truncatechars:80 }}</div>
+                  {% endif %}
+                </td>
+                <td class="text-nowrap">{{ a.due_date|date:"N j, Y, g:i a" }}</td>
+
+                {# Rubric column #}
+                <td>
+                  {% if a.has_rubric %}
+                    <a class="btn btn-sm btn-outline-info"
+                       href="{% url 'rubrics:detail' a.pk %}">
+                      {% if user.role == "INSTRUCTOR" %}Manage{% else %}View{% endif %}
+                    </a>
+                  {% elif user.role == "INSTRUCTOR" %}
+                    <a class="btn btn-sm btn-outline-secondary"
+                       href="{% url 'rubrics:create' a.pk %}">Create</a>
+                  {% else %}
+                    <span class="text-muted small">—</span>
+                  {% endif %}
+                </td>
+
+                {% if user.role == "STUDENT" %}
+                  <td>
+                    {% if a.my_submission %}
+                      <span class="badge {% if a.my_submission.status == 'LATE' %}bg-warning text-dark{% else %}bg-success{% endif %} me-2">
+                        {{ a.my_submission.get_status_display }}
+                      </span>
+                      <a class="btn btn-sm btn-outline-primary"
+                         href="{% url 'submissions:submit' a.pk %}">Replace</a>
+                    {% else %}
+                      <a class="btn btn-sm btn-primary"
+                         href="{% url 'submissions:submit' a.pk %}">Submit</a>
+                    {% endif %}
+                  </td>
+                {% endif %}
+
+                {% if user.role == "INSTRUCTOR" %}
+                  <td>
+                    <div class="d-flex gap-1 flex-wrap">
+                      <a class="btn btn-sm btn-outline-secondary"
+                         href="{% url 'submissions:assignment_submissions' a.pk %}">
+                        Submissions ({{ a.submission_count }})
+                      </a>
+                      <a class="btn btn-sm btn-outline-success"
+                         href="{% url 'grading:manage' a.pk %}">
+                        Grades
+                      </a>
+                    </div>
+                  </td>
+                {% endif %}
+
               </tr>
             {% endfor %}
           </tbody>
@@ -46,40 +100,3 @@
     </div>
   {% endif %}
 {% endblock %}
-
-{% extends "base.html" %}
-
-{% block title %}Assignments · Academic Peer Review{% endblock %}
-
-{% block content %}
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0">Assignments</h1>
-  </div>
-  {% if assignments %}
-    <div class="card border-0 shadow-sm">
-      <div class="table-responsive">
-        <table class="table align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th scope="col">Course</th>
-              <th scope="col">Title</th>
-              <th scope="col">Due date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for assignment in assignments %}
-              <tr>
-                <td>{{ assignment.course.code }}</td>
-                <td>{{ assignment.title }}</td>
-                <td>{{ assignment.due_date }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  {% else %}
-    <p class="text-muted">No assignments have been created yet.</p>
-  {% endif %}
-{% endblock %}
-

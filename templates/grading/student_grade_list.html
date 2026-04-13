@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}My grades · Academic Peer Review{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+    <div>
+      <h1 class="h4 mb-1">My grades</h1>
+      <p class="text-muted mb-0">Released results for your submitted work.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'accounts:dashboard' %}">Dashboard</a>
+  </div>
+
+  {% if grades %}
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Assignment</th>
+              <th scope="col">Course</th>
+              <th scope="col" class="text-end">Score / 100</th>
+              <th scope="col" class="text-center">Grade</th>
+              <th scope="col" class="text-end">GPA</th>
+              <th scope="col" class="text-end">Released</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for grade in grades %}
+              <tr>
+                <td class="text-muted small">{{ forloop.counter }}</td>
+                <td class="fw-semibold">{{ grade.submission.assignment.title }}</td>
+                <td>{{ grade.submission.assignment.course.code }}</td>
+                <td class="text-end font-monospace fw-bold">{{ grade.numeric_score_100 }}</td>
+                <td class="text-center">
+                  <span class="badge fs-6
+                    {% if grade.letter_grade == 'A' %}bg-success
+                    {% elif grade.letter_grade == 'B' %}bg-primary
+                    {% elif grade.letter_grade == 'C' %}bg-info text-dark
+                    {% elif grade.letter_grade == 'D' %}bg-warning text-dark
+                    {% else %}bg-danger{% endif %}">
+                    {{ grade.letter_grade }}
+                  </span>
+                </td>
+                <td class="text-end font-monospace">{{ grade.gpa }}</td>
+                <td class="text-end text-muted small text-nowrap">
+                  {{ grade.released_at|date:"N j, Y" }}
+                </td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-primary"
+                     href="{% url 'grading:result' grade.submission.pk %}">
+                    View feedback
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center py-5">
+        <p class="text-muted mb-0">No grades have been released yet.</p>
+        <p class="text-muted small mt-1">
+          Your instructor will release results after peer reviews are complete.
+        </p>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

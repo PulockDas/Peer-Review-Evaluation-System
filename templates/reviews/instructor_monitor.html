@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Review monitor · {{ assignment.title }}{% endblock %}
+
+{% block content %}
+
+  {# Breadcrumb #}
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'courses:instructor_list' %}">My courses</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'courses:detail' assignment.course.pk %}">{{ assignment.course.code }}</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'assignments:list' assignment.course.pk %}">Assignments</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'submissions:assignment_submissions' assignment.pk %}">Submissions</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Review monitor</li>
+    </ol>
+  </nav>
+
+  {# Header #}
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+    <div>
+      <div class="text-muted small">{{ assignment.course.code }}</div>
+      <h1 class="h4 mb-1">Review monitor</h1>
+      <p class="text-muted mb-0">{{ assignment.title }} &middot; Due {{ assignment.due_date|date:"N j, Y, g:i a" }}</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-secondary"
+         href="{% url 'reviews:allocate' assignment.pk %}">Allocation</a>
+      <a class="btn btn-outline-secondary"
+         href="{% url 'submissions:assignment_submissions' assignment.pk %}">Submissions</a>
+      <a class="btn btn-primary"
+         href="{% url 'grading:manage' assignment.pk %}">Grades</a>
+    </div>
+  </div>
+
+  {# Summary stats #}
+  <div class="d-flex flex-wrap gap-3 mb-4">
+    <div class="card border-0 shadow-sm text-center px-4 py-3">
+      <div class="fs-4 fw-bold text-secondary">{{ total }}</div>
+      <div class="text-muted small">Total assigned</div>
+    </div>
+    <div class="card border-0 shadow-sm text-center px-4 py-3">
+      <div class="fs-4 fw-bold text-success">{{ completed }}</div>
+      <div class="text-muted small">Completed</div>
+    </div>
+    <div class="card border-0 shadow-sm text-center px-4 py-3">
+      <div class="fs-4 fw-bold text-info">{{ in_progress }}</div>
+      <div class="text-muted small">In progress</div>
+    </div>
+    <div class="card border-0 shadow-sm text-center px-4 py-3">
+      <div class="fs-4 fw-bold {% if pending > 0 %}text-warning{% else %}text-success{% endif %}">
+        {{ pending }}
+      </div>
+      <div class="text-muted small">Pending</div>
+    </div>
+  </div>
+
+  {% if grouped %}
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" style="width:3rem">#</th>
+              <th scope="col">Author (submission)</th>
+              <th scope="col">Reviewer</th>
+              <th scope="col" class="text-center">Status</th>
+              <th scope="col" class="text-end">Score</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for submission, ras in grouped %}
+              {% for ra in ras %}
+                <tr {% if forloop.first %}class="border-top border-2"{% endif %}>
+                  {% if forloop.first %}
+                    <td rowspan="{{ ras|length }}" class="text-muted small align-top pt-3">
+                      {{ forloop.parentloop.counter }}
+                    </td>
+                    <td rowspan="{{ ras|length }}" class="align-top pt-3">
+                      <div class="fw-semibold">
+                        {{ submission.student.get_full_name|default:submission.student.username }}
+                      </div>
+                      {% if submission.student.reg_no %}
+                        <div class="text-muted small font-monospace">{{ submission.student.reg_no }}</div>
+                      {% endif %}
+                    </td>
+                  {% endif %}
+                  <td>
+                    {{ ra.reviewer.get_full_name|default:ra.reviewer.username }}
+                    {% if ra.reviewer.reg_no %}
+                      <div class="text-muted small font-monospace">{{ ra.reviewer.reg_no }}</div>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    {% if ra.review_status == "COMPLETED" %}
+                      <span class="badge bg-success">Completed</span>
+                    {% elif ra.review_status == "IN_PROGRESS" %}
+                      <span class="badge bg-info text-dark">In progress</span>
+                    {% else %}
+                      <span class="badge bg-light text-dark border">Pending</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end font-monospace">
+                    {% if ra.submitted_review %}
+                      {{ ra.submitted_review.total_score }}
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    {% if ra.submitted_review %}
+                      <a class="btn btn-sm btn-outline-primary"
+                         href="{% url 'reviews:review_inspect' ra.submitted_review.pk %}">
+                        View
+                      </a>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center py-5">
+        <p class="text-muted mb-1">No review assignments have been created yet.</p>
+        <a class="btn btn-primary mt-2"
+           href="{% url 'reviews:allocate' assignment.pk %}">Go to allocation</a>
+      </div>
+    </div>
+  {% endif %}
+
+{% endblock %}

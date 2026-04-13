@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}My Reviews · Academic Peer Review{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+    <div>
+      <h1 class="h4 mb-1">My reviews</h1>
+      <p class="text-muted mb-0">Peer review assignments allocated to you.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'accounts:dashboard' %}">Dashboard</a>
+  </div>
+
+  {% if review_assignments %}
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Assignment</th>
+              <th scope="col">Course</th>
+              <th scope="col">Due</th>
+              <th scope="col">Status</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ra in review_assignments %}
+              <tr>
+                <td class="text-muted small">{{ forloop.counter }}</td>
+                <td class="fw-semibold">{{ ra.submission.assignment.title }}</td>
+                <td>{{ ra.submission.assignment.course.code }}</td>
+                <td class="text-nowrap">
+                  {{ ra.submission.assignment.due_date|date:"N j, Y" }}
+                </td>
+                <td>
+                  {% if ra.review_status == "COMPLETED" %}
+                    <span class="badge bg-success">Completed</span>
+                  {% elif ra.review_status == "IN_PROGRESS" %}
+                    <span class="badge bg-info text-dark">In progress</span>
+                  {% else %}
+                    <span class="badge bg-light text-dark border">Pending</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  {% if ra.review_status == "COMPLETED" %}
+                    <a class="btn btn-sm btn-outline-secondary"
+                       href="{% url 'reviews:review_form' ra.anonymous_token %}">
+                      View submitted
+                    </a>
+                  {% else %}
+                    <a class="btn btn-sm btn-primary"
+                       href="{% url 'reviews:review_form' ra.anonymous_token %}">
+                      {% if ra.review_status == "IN_PROGRESS" %}Continue{% else %}Start review{% endif %}
+                    </a>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center py-5">
+        <p class="text-muted mb-0">You have no review assignments yet.</p>
+        <p class="text-muted small mt-1">
+          Your instructor will allocate peer reviews once submissions close.
+        </p>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

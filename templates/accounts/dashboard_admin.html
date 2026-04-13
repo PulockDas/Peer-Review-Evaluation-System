@@ -3,36 +3,148 @@
 {% block title %}Admin dashboard · Academic Peer Review{% endblock %}
 
 {% block content %}
-  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
     <div>
-      <h1 class="h4 mb-1">Admin dashboard</h1>
-      <p class="text-muted mb-0">Manage users, roles, and system-level settings.</p>
+      <h1 class="page-title">Admin dashboard</h1>
+      <p class="page-subtitle">System overview and management.</p>
     </div>
-    <a href="/admin/" class="btn btn-outline-secondary">Open Django admin</a>
+    <a href="/admin/" target="_blank" rel="noopener" class="btn btn-outline-secondary">
+      <i class="bi bi-gear me-1"></i>Django admin
+    </a>
   </div>
 
-  <div class="row g-3">
-    <div class="col-md-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <h2 class="h6 mb-2">User management</h2>
-          <p class="text-muted mb-0">
-            Create users and assign roles (Admin / Instructor / Student) via Django admin. Future permission rules can
-            build on the role field.
-          </p>
-        </div>
+  {# ── Stat cards ───────────────────────────────────────────────────────── #}
+  <div class="row g-3 mb-4">
+
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm stat-card text-center py-3 px-2 h-100">
+        <div class="stat-number text-primary">{{ total_users }}</div>
+        <div class="stat-label">Total users</div>
       </div>
     </div>
-    <div class="col-md-6">
+
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm stat-card text-center py-3 px-2 h-100">
+        <div class="stat-number text-success">{{ total_instructors }}</div>
+        <div class="stat-label">Instructors</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm stat-card text-center py-3 px-2 h-100">
+        <div class="stat-number text-info">{{ total_students }}</div>
+        <div class="stat-label">Students</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm stat-card text-center py-3 px-2 h-100">
+        <div class="stat-number text-secondary">{{ total_courses }}</div>
+        <div class="stat-label">Courses</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm stat-card text-center py-3 px-2 h-100">
+        <div class="stat-number text-primary">{{ total_submissions }}</div>
+        <div class="stat-label">Submissions</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm stat-card text-center py-3 px-2 h-100">
+        <div class="stat-number {% if pending_reviews > 0 %}text-warning{% else %}text-success{% endif %}">
+          {{ pending_reviews }}
+        </div>
+        <div class="stat-label">Pending reviews</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm stat-card text-center py-3 px-2 h-100">
+        <div class="stat-number text-success">{{ released_grades }}</div>
+        <div class="stat-label">Released grades</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="row g-3 mb-4">
+    {# Recent users #}
+    <div class="col-lg-7">
       <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <h2 class="h6 mb-2">System status</h2>
-          <p class="text-muted mb-0">
-            This dashboard is a placeholder foundation. As the project grows, this will summarize usage and workflows.
-          </p>
+        <div class="card-header bg-white py-3 fw-semibold">
+          <i class="bi bi-people me-2 text-muted"></i>Recently joined users
+        </div>
+        {% if recent_users %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for u in recent_users %}
+                  <tr>
+                    <td class="fw-semibold">{{ u.get_full_name|default:"—" }}</td>
+                    <td class="text-muted">{{ u.username }}</td>
+                    <td>
+                      <span class="badge
+                        {% if u.role == 'INSTRUCTOR' %}bg-success
+                        {% elif u.role == 'STUDENT' %}bg-primary
+                        {% else %}bg-secondary{% endif %}">
+                        {{ u.get_role_display }}
+                      </span>
+                    </td>
+                    <td class="text-muted small text-nowrap">{{ u.date_joined|date:"N j, Y" }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="card-body empty-state">
+            <i class="bi bi-people d-block mb-2"></i>No users yet.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Quick links #}
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-3 fw-semibold">
+          <i class="bi bi-lightning me-2 text-muted"></i>Quick actions
+        </div>
+        <div class="card-body d-flex flex-column gap-2">
+          <a href="/admin/accounts/user/" target="_blank" rel="noopener"
+             class="btn btn-outline-primary text-start d-flex align-items-center gap-2">
+            <i class="bi bi-person-plus"></i>Manage users
+          </a>
+          <a href="/admin/courses/course/" target="_blank" rel="noopener"
+             class="btn btn-outline-secondary text-start d-flex align-items-center gap-2">
+            <i class="bi bi-mortarboard"></i>Manage courses
+          </a>
+          <a href="/admin/submissions/submission/" target="_blank" rel="noopener"
+             class="btn btn-outline-secondary text-start d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-text"></i>View submissions
+          </a>
+          <a href="/admin/reviews/reviewassignment/" target="_blank" rel="noopener"
+             class="btn btn-outline-secondary text-start d-flex align-items-center gap-2">
+            <i class="bi bi-diagram-3"></i>Review assignments
+          </a>
+          <a href="/admin/grading/finalgrade/" target="_blank" rel="noopener"
+             class="btn btn-outline-success text-start d-flex align-items-center gap-2">
+            <i class="bi bi-award"></i>Final grades
+          </a>
         </div>
       </div>
     </div>
   </div>
+
 {% endblock %}
-

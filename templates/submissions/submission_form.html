@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if existing %}Replace submission{% else %}Submit assignment{% endif %} · {{ assignment.title }}
+{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      {# Breadcrumb #}
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{% url 'courses:student_list' %}">My courses</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'courses:detail' assignment.course.pk %}">{{ assignment.course.code }}</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'assignments:list' assignment.course.pk %}">Assignments</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">{{ assignment.title }}</li>
+        </ol>
+      </nav>
+
+      {# Assignment summary card #}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <h1 class="h5 mb-1">{{ assignment.title }}</h1>
+          <div class="text-muted small mb-2">
+            {{ assignment.course.code }} &middot;
+            Due {{ assignment.due_date|date:"N j, Y, g:i a" }}
+          </div>
+          {% if assignment.description %}
+            <p class="mb-0">{{ assignment.description }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      {# Late warning #}
+      {% if is_past_due %}
+        <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-exclamation-triangle-fill flex-shrink-0" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+          </svg>
+          <div>
+            The deadline has passed. Any submission made now will be marked as <strong>Late</strong>.
+          </div>
+        </div>
+      {% endif %}
+
+      {# Submission form #}
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+          <h2 class="h6 mb-0 fw-semibold">
+            {% if existing %}Replace your submission{% else %}Submit your work{% endif %}
+          </h2>
+        </div>
+        <div class="card-body p-4">
+
+          {# Show existing file if present #}
+          {% if existing and existing_filename %}
+            <div class="alert alert-light border mb-4">
+              <div class="text-muted small mb-1">Current file</div>
+              <a href="{{ existing.file.url }}" target="_blank" rel="noopener noreferrer" class="fw-semibold text-decoration-none">
+                📎 {{ existing_filename }}
+              </a>
+              <div class="text-muted small mt-1">
+                Last updated {{ existing.updated_at|date:"N j, Y, g:i a" }} &middot;
+                <span class="badge {% if existing.status == 'LATE' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                  {{ existing.get_status_display }}
+                </span>
+              </div>
+            </div>
+          {% endif %}
+
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="{{ form.file.id_for_label }}">
+                {{ form.file.label }}
+                {% if not existing %}<span class="text-muted fw-normal">(optional if you add notes below)</span>{% endif %}
+              </label>
+              {{ form.file }}
+              {% if form.file.errors %}
+                <div class="text-danger small mt-1">{{ form.file.errors }}</div>
+              {% endif %}
+              <div class="form-text">Accepted formats: PDF, Word, ZIP, or any file your instructor expects.</div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold" for="{{ form.content.id_for_label }}">
+                {{ form.content.label }}
+              </label>
+              {{ form.content }}
+              {% if form.content.errors %}
+                <div class="text-danger small mt-1">{{ form.content.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary">
+                {% if existing %}Update submission{% else %}Submit{% endif %}
+              </button>
+              <a class="btn btn-outline-secondary" href="{% url 'assignments:list' assignment.course.pk %}">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+{% endblock %}

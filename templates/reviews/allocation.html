@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Reviewer Allocation · {{ assignment.title }}{% endblock %}
+
+{% block content %}
+
+  {# Breadcrumb #}
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'courses:instructor_list' %}">My courses</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'courses:detail' assignment.course.pk %}">{{ assignment.course.code }}</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'assignments:list' assignment.course.pk %}">Assignments</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'submissions:assignment_submissions' assignment.pk %}">Submissions</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Reviewer allocation</li>
+    </ol>
+  </nav>
+
+  {# Header #}
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+    <div>
+      <div class="text-muted small">{{ assignment.course.code }}</div>
+      <h1 class="h4 mb-1">Reviewer allocation</h1>
+      <p class="text-muted mb-0">{{ assignment.title }} &middot; Due {{ assignment.due_date|date:"N j, Y, g:i a" }}</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'submissions:assignment_submissions' assignment.pk %}">
+      Back to submissions
+    </a>
+  </div>
+
+  {# Summary stat cards #}
+  <div class="d-flex flex-wrap gap-3 mb-4">
+    <div class="card border-0 shadow-sm text-center px-4 py-3">
+      <div class="fs-4 fw-bold text-primary">{{ submission_count }}</div>
+      <div class="text-muted small">Submissions</div>
+    </div>
+    <div class="card border-0 shadow-sm text-center px-4 py-3">
+      <div class="fs-4 fw-bold {% if allocation_exists %}text-success{% else %}text-secondary{% endif %}">
+        {{ total_assignments }}
+      </div>
+      <div class="text-muted small">Review assignments</div>
+    </div>
+    {% if submission_count > 0 and allocation_exists %}
+      <div class="card border-0 shadow-sm text-center px-4 py-3">
+        <div class="fs-4 fw-bold text-info">3</div>
+        <div class="text-muted small">Reviewers / submission</div>
+      </div>
+    {% endif %}
+  </div>
+
+  {# Action buttons #}
+  <div class="mb-4">
+    {% if not allocation_exists %}
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="allocate">
+        <button type="submit" class="btn btn-primary">
+          Allocate reviewers
+        </button>
+        <span class="text-muted small ms-3">
+          Assigns 3 reviewers per submission from enrolled students using balanced workload.
+        </span>
+      </form>
+    {% else %}
+      <form method="post" class="d-inline"
+            onsubmit="return confirm('This will delete all existing assignments and re-run allocation. Continue?')">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="reset">
+        <button type="submit" class="btn btn-warning">
+          Reset &amp; re-allocate
+        </button>
+      </form>
+      <span class="text-muted small ms-3">
+        Allocation already exists. Reset to reassign all reviewers from scratch.
+      </span>
+    {% endif %}
+  </div>
+
+  {# Allocation table #}
+  {% if allocation_exists and grouped %}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Assignments by submission</span>
+        <span class="badge bg-secondary">{{ total_assignments }} total</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Author (submission)</th>
+              <th scope="col">Assigned reviewers</th>
+              <th scope="col" class="text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for submission, ras in grouped %}
+              <tr>
+                <td class="text-muted small">{{ forloop.counter }}</td>
+                <td>
+                  <span class="fw-semibold">
+                    {{ submission.student.get_full_name|default:submission.student.username }}
+                  </span>
+                  {% if submission.student.reg_no %}
+                    <div class="text-muted small font-monospace">{{ submission.student.reg_no }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% for ra in ras %}
+                    <div class="d-flex align-items-center gap-2 {% if not forloop.last %}mb-1{% endif %}">
+                      <span>
+                        {{ ra.reviewer.get_full_name|default:ra.reviewer.username }}
+                        {% if ra.reviewer.reg_no %}
+                          <span class="text-muted small font-monospace">({{ ra.reviewer.reg_no }})</span>
+                        {% endif %}
+                      </span>
+                      <span class="badge
+                        {% if ra.review_status == 'COMPLETED' %}bg-success
+                        {% elif ra.review_status == 'IN_PROGRESS' %}bg-info text-dark
+                        {% else %}bg-light text-dark border{% endif %} small">
+                        {{ ra.get_review_status_display }}
+                      </span>
+                    </div>
+                  {% endfor %}
+                </td>
+                <td class="text-center">
+                  {% with completed=0 %}
+                    {% for ra in ras %}
+                      {% if ra.review_status == 'COMPLETED' %}
+                        {# count completed #}
+                      {% endif %}
+                    {% endfor %}
+                  {% endwith %}
+                  <span class="text-muted small">
+                    {{ ras|length }} assigned
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {# Workload summary #}
+    {% if workload %}
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+          <span class="fw-semibold">Reviewer workload</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">Reviewer</th>
+                <th scope="col">Reg no</th>
+                <th scope="col" class="text-center">Assigned reviews</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for reviewer, count in workload %}
+                <tr>
+                  <td class="fw-semibold">
+                    {{ reviewer.get_full_name|default:reviewer.username }}
+                  </td>
+                  <td class="font-monospace text-muted small">
+                    {{ reviewer.reg_no|default:"—" }}
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-primary rounded-pill">{{ count }}</span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+  {% elif not allocation_exists %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center py-5">
+        <p class="text-muted mb-2">No reviewers have been allocated yet.</p>
+        <p class="text-muted small mb-0">
+          Click <strong>Allocate reviewers</strong> above to automatically assign
+          3 reviewers per submission.
+        </p>
+      </div>
+    </div>
+  {% endif %}
+
+{% endblock %}

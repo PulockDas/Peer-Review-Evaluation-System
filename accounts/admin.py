@@ -8,13 +8,17 @@ from .models import User
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ("username", "email", "role")
+        fields = ("username", "email", "role", "reg_no")
 
 
 class CustomUserChangeForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = User
-        fields = ("username", "email", "role", "is_active", "is_staff", "is_superuser", "groups", "user_permissions")
+        fields = (
+            "username", "email", "role", "reg_no",
+            "is_active", "is_staff", "is_superuser",
+            "groups", "user_permissions",
+        )
 
 
 @admin.register(User)
@@ -23,14 +27,14 @@ class UserAdmin(DjangoUserAdmin):
     form = CustomUserChangeForm
     model = User
 
-    list_display = ("username", "email", "role", "is_staff", "is_active")
+    list_display = ("username", "get_full_name", "email", "reg_no", "role", "is_staff", "is_active")
     list_filter = ("role", "is_staff", "is_active")
-    search_fields = ("username", "email")
+    search_fields = ("username", "email", "first_name", "last_name", "reg_no")
 
     fieldsets = (
         (None, {"fields": ("username", "password")}),
         ("Personal info", {"fields": ("first_name", "last_name", "email")}),
-        ("Role", {"fields": ("role",)}),
+        ("Role & registration", {"fields": ("role", "reg_no")}),
         (
             "Permissions",
             {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")},
@@ -42,8 +46,7 @@ class UserAdmin(DjangoUserAdmin):
             None,
             {
                 "classes": ("wide",),
-                "fields": ("username", "email", "role", "password1", "password2"),
+                "fields": ("username", "email", "role", "reg_no", "password1", "password2"),
             },
         ),
     )
-

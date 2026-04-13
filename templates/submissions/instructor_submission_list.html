@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Submissions · {{ assignment.title }}{% endblock %}
+
+{% block content %}
+
+  {# Breadcrumb #}
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'courses:instructor_list' %}">My courses</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'courses:detail' assignment.course.pk %}">{{ assignment.course.code }}</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'assignments:list' assignment.course.pk %}">Assignments</a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">Submissions</li>
+    </ol>
+  </nav>
+
+  {# Header #}
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+    <div>
+      <div class="text-muted small">{{ assignment.course.code }}</div>
+      <h1 class="h4 mb-1">{{ assignment.title }} — Submissions</h1>
+      <p class="text-muted mb-0">Due {{ assignment.due_date|date:"N j, Y, g:i a" }}</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-secondary" href="{% url 'assignments:list' assignment.course.pk %}">
+        Back to assignments
+      </a>
+      <a class="btn btn-outline-primary" href="{% url 'reviews:allocate' assignment.pk %}">
+        Reviewer allocation
+      </a>
+      <a class="btn btn-outline-primary" href="{% url 'reviews:monitor' assignment.pk %}">
+        Review monitor
+      </a>
+      <a class="btn btn-primary" href="{% url 'grading:manage' assignment.pk %}">
+        Grades
+      </a>
+    </div>
+  </div>
+
+  {# Summary badges #}
+  <div class="d-flex gap-3 mb-4">
+    <div class="card border-0 shadow-sm text-center px-4 py-3">
+      <div class="fs-4 fw-bold text-primary">{{ submitted_count }}</div>
+      <div class="text-muted small">Submitted</div>
+    </div>
+    <div class="card border-0 shadow-sm text-center px-4 py-3">
+      <div class="fs-4 fw-bold text-secondary">{{ enrolled_count }}</div>
+      <div class="text-muted small">Enrolled</div>
+    </div>
+    <div class="card border-0 shadow-sm text-center px-4 py-3">
+      <div class="fs-4 fw-bold {% if pending_count > 0 %}text-warning{% else %}text-success{% endif %}">
+        {{ pending_count }}
+      </div>
+      <div class="text-muted small">Not yet submitted</div>
+    </div>
+  </div>
+
+  {% if submissions %}
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">Student</th>
+              <th scope="col">Submitted</th>
+              <th scope="col">Last updated</th>
+              <th scope="col">Status</th>
+              <th scope="col">File</th>
+              <th scope="col">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sub in submissions %}
+              <tr>
+                <td>
+                  <span class="fw-semibold">
+                    {{ sub.student.get_full_name|default:sub.student.username }}
+                  </span>
+                  <div class="text-muted small">
+                    {{ sub.student.username }}
+                    {% if sub.student.reg_no %}
+                      &middot; <span class="font-monospace">{{ sub.student.reg_no }}</span>
+                    {% endif %}
+                  </div>
+                </td>
+                <td class="text-nowrap">{{ sub.submitted_at|date:"N j, Y, g:i a" }}</td>
+                <td class="text-nowrap">
+                  {% if sub.updated_at != sub.submitted_at %}
+                    {{ sub.updated_at|date:"N j, Y, g:i a" }}
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge {% if sub.status == 'LATE' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                    {{ sub.get_status_display }}
+                  </span>
+                </td>
+                <td>
+                  {% if sub.file %}
+                    <a href="{{ sub.file.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
+                      Download
+                    </a>
+                  {% else %}
+                    <span class="text-muted small">No file</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if sub.content %}
+                    <span class="text-muted" title="{{ sub.content }}">
+                      {{ sub.content|truncatechars:60 }}
+                    </span>
+                  {% else %}
+                    <span class="text-muted small">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center py-5">
+        <p class="text-muted mb-0">No students have submitted yet.</p>
+      </div>
+    </div>
+  {% endif %}
+
+{% endblock %}

@@ -1,42 +1,106 @@
 {% extends "base.html" %}
 
-{% block title %}Home · Academic Peer Review{% endblock %}
+{% block title %}Academic Peer Review System{% endblock %}
 
 {% block content %}
-  <div class="row align-items-center">
-    <div class="col-lg-6">
-      <h1 class="display-5 fw-semibold mb-3">Academic Peer Review System</h1>
-      <p class="lead text-muted">
-        A modular platform for managing courses, assignments, submissions, and structured peer review workflows.
+
+  {# ── Hero ─────────────────────────────────────────────────────────────── #}
+  <div class="row align-items-center py-3 py-lg-5">
+    <div class="col-lg-6 mb-4 mb-lg-0">
+      <span class="badge bg-primary mb-3">Academic Platform</span>
+      <h1 class="display-5 fw-bold lh-sm mb-3">
+        Structured Peer Review<br>for Academic Courses
+      </h1>
+      <p class="lead text-muted mb-4">
+        A modular platform that takes students from assignment submission through anonymous
+        peer review to final graded results — all in one place.
       </p>
-      <div class="d-flex flex-wrap gap-2 mt-3">
+      <div class="d-flex flex-wrap gap-2">
         {% if user.is_authenticated %}
-          <a href="{% url 'accounts:dashboard' %}" class="btn btn-primary btn-lg">
-            Go to dashboard
-          </a>
-          <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary btn-lg">
-            View profile
+          <a href="{% url 'accounts:dashboard' %}" class="btn btn-primary btn-lg px-4">
+            <i class="bi bi-speedometer2 me-2"></i>Go to dashboard
           </a>
         {% else %}
-          <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-lg">
-            Log in
+          <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-lg px-4">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Sign in
           </a>
         {% endif %}
       </div>
     </div>
-    <div class="col-lg-5 offset-lg-1 mt-4 mt-lg-0">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h2 class="h5 mb-3">System overview</h2>
-          <ul class="list-unstyled mb-0 text-muted">
-            <li class="mb-2">• Modular Django apps for accounts, courses, assignments, submissions, reviews, and grading.</li>
-            <li class="mb-2">• PostgreSQL-ready configuration for local development.</li>
-            <li class="mb-2">• Role-ready user model for Admin, Instructor, and Student flows.</li>
-            <li class="mb-0">• Clean Bootstrap 5 UI foundation for future features.</li>
-          </ul>
+
+    <div class="col-lg-5 offset-lg-1">
+      <div class="row g-3">
+        <div class="col-6">
+          <div class="card border-0 shadow-sm p-3 h-100">
+            <i class="bi bi-mortarboard fs-3 text-primary mb-2"></i>
+            <div class="fw-semibold mb-1">Courses &amp; Enrollments</div>
+            <div class="text-muted small">Instructors create courses; students enroll and access assignments.</div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="card border-0 shadow-sm p-3 h-100">
+            <i class="bi bi-file-earmark-text fs-3 text-success mb-2"></i>
+            <div class="fw-semibold mb-1">File Submissions</div>
+            <div class="text-muted small">Students upload work before the deadline with optional notes.</div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="card border-0 shadow-sm p-3 h-100">
+            <i class="bi bi-shield-lock fs-3 text-warning mb-2"></i>
+            <div class="fw-semibold mb-1">Anonymous Review</div>
+            <div class="text-muted small">Reviewers score rubric criteria without seeing author identity.</div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="card border-0 shadow-sm p-3 h-100">
+            <i class="bi bi-award fs-3 text-danger mb-2"></i>
+            <div class="fw-semibold mb-1">Grading &amp; Feedback</div>
+            <div class="text-muted small">Final grades computed from review averages, released when ready.</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-{% endblock %}
 
+  {# ── Workflow steps ────────────────────────────────────────────────────── #}
+  <div class="card border-0 shadow-sm mt-4">
+    <div class="card-body py-4">
+      <h2 class="h6 text-muted text-uppercase letter-spacing mb-4 text-center">Workflow</h2>
+      <div class="row g-0 text-center">
+        {% for step in "12345"|make_list %}
+          {% if forloop.counter == 1 %}
+            <div class="col">
+              <i class="bi bi-plus-circle fs-4 text-primary mb-2 d-block"></i>
+              <div class="small fw-semibold">Create assignment</div>
+            </div>
+          {% elif forloop.counter == 2 %}
+            <div class="col d-none d-md-block align-self-center text-muted">&rarr;</div>
+            <div class="col">
+              <i class="bi bi-upload fs-4 text-success mb-2 d-block"></i>
+              <div class="small fw-semibold">Student submits</div>
+            </div>
+          {% elif forloop.counter == 3 %}
+            <div class="col d-none d-md-block align-self-center text-muted">&rarr;</div>
+            <div class="col">
+              <i class="bi bi-diagram-3 fs-4 text-warning mb-2 d-block"></i>
+              <div class="small fw-semibold">Allocate reviewers</div>
+            </div>
+          {% elif forloop.counter == 4 %}
+            <div class="col d-none d-md-block align-self-center text-muted">&rarr;</div>
+            <div class="col">
+              <i class="bi bi-pencil-square fs-4 text-info mb-2 d-block"></i>
+              <div class="small fw-semibold">Peer reviews</div>
+            </div>
+          {% elif forloop.counter == 5 %}
+            <div class="col d-none d-md-block align-self-center text-muted">&rarr;</div>
+            <div class="col">
+              <i class="bi bi-award fs-4 text-danger mb-2 d-block"></i>
+              <div class="small fw-semibold">Grade &amp; release</div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

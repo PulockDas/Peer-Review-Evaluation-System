@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Rubric · {{ assignment.title }}{% endblock %}
+
+{% block content %}
+
+  {# Breadcrumb #}
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      {% if user.role == "INSTRUCTOR" %}
+        <li class="breadcrumb-item"><a href="{% url 'courses:instructor_list' %}">My courses</a></li>
+      {% else %}
+        <li class="breadcrumb-item"><a href="{% url 'courses:student_list' %}">My courses</a></li>
+      {% endif %}
+      <li class="breadcrumb-item"><a href="{% url 'courses:detail' assignment.course.pk %}">{{ assignment.course.code }}</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'assignments:list' assignment.course.pk %}">Assignments</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Rubric</li>
+    </ol>
+  </nav>
+
+  {# Page header #}
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+    <div>
+      <div class="text-muted small">{{ assignment.course.code }}</div>
+      <h1 class="h4 mb-1">
+        {% if rubric.title %}{{ rubric.title }}{% else %}Rubric{% endif %}
+      </h1>
+      <p class="text-muted mb-0">{{ assignment.title }} &middot; Due {{ assignment.due_date|date:"N j, Y, g:i a" }}</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-secondary" href="{% url 'assignments:list' assignment.course.pk %}">
+        Back to assignments
+      </a>
+      {% if can_manage %}
+        <a class="btn btn-primary" href="{% url 'rubrics:criterion_add' rubric.pk %}">
+          + Add criterion
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  {# Rubric description #}
+  {% if rubric.description %}
+    <div class="alert alert-light border mb-4">{{ rubric.description }}</div>
+  {% endif %}
+
+  {# No rubric (student view) #}
+  {% if not rubric %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center py-5">
+        <p class="text-muted mb-0">No rubric has been added for this assignment yet.</p>
+      </div>
+    </div>
+
+  {# Criteria table #}
+  {% elif criteria %}
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" style="width:3rem">#</th>
+              <th scope="col">Criterion</th>
+              <th scope="col">Description</th>
+              <th scope="col" class="text-end">Max marks</th>
+              <th scope="col" class="text-end">Weight&nbsp;(%)</th>
+              {% if can_manage %}<th scope="col"></th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in criteria %}
+              <tr>
+                <td class="text-muted small">{{ forloop.counter }}</td>
+                <td class="fw-semibold">{{ c.criterion_name }}</td>
+                <td class="text-muted small">{{ c.criterion_description|default:"—" }}</td>
+                <td class="text-end font-monospace">{{ c.max_marks }}</td>
+                <td class="text-end font-monospace">{{ c.weight }}</td>
+                {% if can_manage %}
+                  <td class="text-end text-nowrap">
+                    <a class="btn btn-sm btn-outline-secondary me-1"
+                       href="{% url 'rubrics:criterion_edit' c.pk %}">Edit</a>
+                    <a class="btn btn-sm btn-outline-danger"
+                       href="{% url 'rubrics:criterion_delete' c.pk %}">Delete</a>
+                  </td>
+                {% endif %}
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="table-light fw-semibold">
+            <tr>
+              <td colspan="3" class="text-end text-muted small">Totals</td>
+              <td class="text-end font-monospace">{{ total_max_marks }}</td>
+              <td class="text-end font-monospace
+                {% if total_weight == 100 %}text-success{% elif total_weight > 100 %}text-danger{% else %}text-warning{% endif %}">
+                {{ total_weight }}
+              </td>
+              {% if can_manage %}<td></td>{% endif %}
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    {# Weight hint for instructor #}
+    {% if can_manage %}
+      {% if total_weight != 100 %}
+        <div class="alert alert-warning small">
+          Total weight is <strong>{{ total_weight }}%</strong> — criteria weights should sum to 100%.
+        </div>
+      {% else %}
+        <div class="alert alert-success small">
+          Total weight is exactly 100%. ✓
+        </div>
+      {% endif %}
+    {% endif %}
+
+  {% else %}
+    {# Rubric exists but no criteria yet #}
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center py-5">
+        <p class="text-muted mb-2">Rubric created but no criteria added yet.</p>
+        {% if can_manage %}
+          <a class="btn btn-primary" href="{% url 'rubrics:criterion_add' rubric.pk %}">Add first criterion</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+{% endblock %}

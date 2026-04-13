@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Reviewer accuracy · {{ assignment.title }}{% endblock %}
+
+{% block content %}
+
+  {# Breadcrumb #}
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'courses:instructor_list' %}">My courses</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'courses:detail' assignment.course.pk %}">{{ assignment.course.code }}</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'assignments:list' assignment.course.pk %}">Assignments</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'grading:manage' assignment.pk %}">Grade management</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Reviewer accuracy</li>
+    </ol>
+  </nav>
+
+  {# Header #}
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+    <div>
+      <div class="text-muted small">{{ assignment.course.code }}</div>
+      <h1 class="h4 mb-1">Reviewer accuracy</h1>
+      <p class="text-muted mb-0">{{ assignment.title }}</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'grading:manage' assignment.pk %}">
+      Back to grade management
+    </a>
+  </div>
+
+  {% if reviewer_summary %}
+
+    {# Per-reviewer summary #}
+    <h2 class="h6 text-muted mb-2">Summary by reviewer</h2>
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Reviewer</th>
+              <th scope="col" class="text-center">Reviews done</th>
+              <th scope="col" class="text-end">Avg accuracy</th>
+              <th scope="col" class="text-end">Avg deviation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in reviewer_summary %}
+              <tr>
+                <td class="text-muted small">{{ forloop.counter }}</td>
+                <td>
+                  <div class="fw-semibold">
+                    {{ s.reviewer.get_full_name|default:s.reviewer.username }}
+                  </div>
+                  {% if s.reviewer.reg_no %}
+                    <div class="text-muted small font-monospace">{{ s.reviewer.reg_no }}</div>
+                  {% endif %}
+                </td>
+                <td class="text-center">{{ s.review_count }}</td>
+                <td class="text-end">
+                  <span class="font-monospace fw-bold
+                    {% if s.avg_accuracy >= 90 %}text-success
+                    {% elif s.avg_accuracy >= 70 %}text-warning
+                    {% else %}text-danger{% endif %}">
+                    {{ s.avg_accuracy }}
+                  </span>
+                </td>
+                <td class="text-end font-monospace text-muted">{{ s.avg_deviation }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {# Per-review detail #}
+    <h2 class="h6 text-muted mb-2">Detail per review</h2>
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">Reviewer</th>
+              <th scope="col">Author (submission)</th>
+              <th scope="col" class="text-end">Reviewer score</th>
+              <th scope="col" class="text-end">Final avg</th>
+              <th scope="col" class="text-end">Deviation</th>
+              <th scope="col" class="text-end">Accuracy</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for acc in accuracies %}
+              <tr>
+                <td>
+                  {{ acc.reviewer.get_full_name|default:acc.reviewer.username }}
+                  {% if acc.reviewer.reg_no %}
+                    <div class="text-muted small font-monospace">{{ acc.reviewer.reg_no }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  {{ acc.submission.student.get_full_name|default:acc.submission.student.username }}
+                  {% if acc.submission.student.reg_no %}
+                    <div class="text-muted small font-monospace">{{ acc.submission.student.reg_no }}</div>
+                  {% endif %}
+                </td>
+                <td class="text-end font-monospace">{{ acc.review.total_score }}</td>
+                <td class="text-end font-monospace">
+                  {% with fg=acc.submission.final_grade %}
+                    {% if fg %}{{ fg.numeric_score_100 }}{% else %}<span class="text-muted">—</span>{% endif %}
+                  {% endwith %}
+                </td>
+                <td class="text-end font-monospace">{{ acc.deviation_from_average }}</td>
+                <td class="text-end">
+                  <span class="font-monospace fw-bold
+                    {% if acc.accuracy_score >= 90 %}text-success
+                    {% elif acc.accuracy_score >= 70 %}text-warning
+                    {% else %}text-danger{% endif %}">
+                    {{ acc.accuracy_score }}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  {% else %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center py-5">
+        <p class="text-muted mb-1">No accuracy data available yet.</p>
+        <p class="text-muted small">
+          Calculate grades first — accuracy scores are generated during grade calculation.
+        </p>
+        <a class="btn btn-primary mt-2" href="{% url 'grading:manage' assignment.pk %}">
+          Go to grade management
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
+{% endblock %}

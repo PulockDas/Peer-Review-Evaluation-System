@@ -1,5 +1,5 @@
-from django.urls import path
 from django.contrib.auth.views import LoginView, LogoutView
+from django.urls import path
 
 from . import views
 
@@ -25,4 +25,3 @@ urlpatterns = [
     path("dashboard/student/", views.StudentDashboardView.as_view(), name="dashboard_student"),
     path("profile/", views.ProfileView.as_view(), name="profile"),
 ]
-

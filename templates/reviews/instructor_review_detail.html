@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Review #{{ object.pk }} · {{ assignment.title }}{% endblock %}
+
+{% block content %}
+
+  {# Breadcrumb #}
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'courses:instructor_list' %}">My courses</a></li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'courses:detail' assignment.course.pk %}">{{ assignment.course.code }}</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'assignments:list' assignment.course.pk %}">Assignments</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'reviews:monitor' assignment.pk %}">Review monitor</a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">Review #{{ object.pk }}</li>
+    </ol>
+  </nav>
+
+  {# Header #}
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+    <div>
+      <div class="text-muted small">{{ assignment.course.code }}</div>
+      <h1 class="h4 mb-1">Review #{{ object.pk }}</h1>
+      <p class="text-muted mb-0">
+        {{ assignment.title }} &middot;
+        Submitted {{ object.submitted_at|date:"N j, Y, g:i a" }}
+      </p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'reviews:monitor' assignment.pk %}">
+      Back to monitor
+    </a>
+  </div>
+
+  {# Reviewer / Author info (instructor-only) #}
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small mb-1">Reviewer</div>
+          <div class="fw-semibold">
+            {{ object.review_assignment.reviewer.get_full_name|default:object.review_assignment.reviewer.username }}
+          </div>
+          {% if object.review_assignment.reviewer.reg_no %}
+            <div class="text-muted small font-monospace">
+              {{ object.review_assignment.reviewer.reg_no }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small mb-1">Author (submission)</div>
+          <div class="fw-semibold">
+            {{ object.review_assignment.submission.student.get_full_name|default:object.review_assignment.submission.student.username }}
+          </div>
+          {% if object.review_assignment.submission.student.reg_no %}
+            <div class="text-muted small font-monospace">
+              {{ object.review_assignment.submission.student.reg_no }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Criterion scores #}
+  {% if criterion_scores %}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white py-3 fw-semibold">Criterion scores</div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Criterion</th>
+              <th scope="col" class="text-end">Max marks</th>
+              <th scope="col" class="text-end">Score</th>
+              <th scope="col">Comment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cs in criterion_scores %}
+              <tr>
+                <td class="text-muted small">{{ forloop.counter }}</td>
+                <td>
+                  <div class="fw-semibold">{{ cs.criterion.criterion_name }}</div>
+                  {% if cs.criterion.criterion_description %}
+                    <div class="text-muted small">{{ cs.criterion.criterion_description }}</div>
+                  {% endif %}
+                </td>
+                <td class="text-end font-monospace">{{ cs.criterion.max_marks }}</td>
+                <td class="text-end font-monospace fw-bold">{{ cs.score }}</td>
+                <td class="text-muted small">{{ cs.comment|default:"—" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="table-light fw-semibold">
+            <tr>
+              <td colspan="3" class="text-end text-muted small">Total score</td>
+              <td class="text-end font-monospace fs-5">{{ object.total_score }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+  {# Overall comment #}
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 fw-semibold">Overall comment</div>
+    <div class="card-body">
+      {% if object.overall_comment %}
+        {{ object.overall_comment|linebreaksbr }}
+      {% else %}
+        <span class="text-muted">No overall comment provided.</span>
+      {% endif %}
+    </div>
+  </div>
+
+{% endblock %}

@@ -28,6 +28,10 @@ INSTALLED_APPS = [
     "accounts.apps.AccountsConfig",
     "courses.apps.CoursesConfig",
     "assignments.apps.AssignmentsConfig",
+    "submissions.apps.SubmissionsConfig",
+    "rubrics.apps.RubricsConfig",
+    "reviews.apps.ReviewsConfig",
+    "grading.apps.GradingConfig",
 ]
 
 MIDDLEWARE = [

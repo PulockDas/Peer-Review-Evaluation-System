@@ -1,5 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import QuerySet
+from django.db.models import Count, QuerySet
 from django.http import Http404
 from django.urls import reverse
 from django.views.generic import CreateView, ListView
@@ -32,14 +32,50 @@ class CourseAssignmentListView(LoginRequiredMixin, ListView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self) -> QuerySet[Assignment]:
-        return Assignment.objects.filter(course=self.course).order_by("due_date")
+        qs = Assignment.objects.filter(course=self.course).order_by("due_date")
+        if getattr(self.request.user, "role", None) == User.Roles.INSTRUCTOR:
+            qs = qs.annotate(submission_count=Count("submissions"))
+        return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["course"] = self.course
-        ctx["can_manage"] = getattr(self.request.user, "role", None) == User.Roles.INSTRUCTOR and (
+        role = getattr(self.request.user, "role", None)
+        ctx["can_manage"] = role == User.Roles.INSTRUCTOR and (
             self.course.instructor_id == self.request.user.id
         )
+
+        # Build a set of assignment IDs that already have a rubric
+        from rubrics.models import Rubric
+
+        rubric_ids = set(
+            Rubric.objects.filter(assignment__course=self.course)
+            .values_list("assignment_id", flat=True)
+        )
+
+        if role == User.Roles.STUDENT:
+            from submissions.models import Submission
+
+            sub_map = {
+                s.assignment_id: s
+                for s in Submission.objects.filter(
+                    assignment__course=self.course,
+                    student=self.request.user,
+                )
+            }
+            assignments = list(ctx["assignments"])
+            for a in assignments:
+                a.my_submission = sub_map.get(a.pk)
+                a.has_rubric = a.pk in rubric_ids
+            ctx["assignments"] = assignments
+
+        else:
+            # Instructor path: just annotate has_rubric
+            assignments = list(ctx["assignments"])
+            for a in assignments:
+                a.has_rubric = a.pk in rubric_ids
+            ctx["assignments"] = assignments
+
         return ctx
 
 
@@ -61,4 +97,3 @@ class AssignmentCreateView(RoleRequiredMixin, CreateView):
 
     def get_success_url(self) -> str:
         return reverse("assignments:list", kwargs={"course_id": self.course.pk})
-
